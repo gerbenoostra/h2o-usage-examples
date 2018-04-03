@@ -42,11 +42,6 @@ class SparklingWaterTest extends IntegrationTest with SharedH2OContext {
       val p = easyPredictModelWrapper.predictBinomial(row)
       logger.info("Example row gets label:" + p.label)
       logger.info("Class probabilities: " + p.classProbabilities.mkString(", "))
-      // now switch to mojo, thanks to source code of H2OGBM
-      //val mojoModel = new H2OMOJOModel(ModelSerializationSupport.getMojoData(gbmModel))
-      //mojoModel.write.overwrite.save(mojoPath)
-      //val simpleModel = new EasyPredictModelWrapper(MojoModel.load(mojoPath))
-
     }
   }
 
