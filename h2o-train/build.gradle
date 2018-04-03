@@ -1,0 +1,35 @@
+dependencies {
+    compile project(':h2o-predict')
+}
+buildscript {
+    ext {
+        sparkV = "2.2.1"
+        sparkTestV = "2.2.1_0.9.0"
+        // 2.1.24 fails with "ERROR: Unknown argument (-stacktrace_collector_interval) " as described in https://0xdata.atlassian.net/browse/SW-776
+        // 2.2.10 fails with "ERROR: Unknown argument (-stacktrace_collector_interval) " as described in https://0xdata.atlassian.net/browse/SW-776
+        spWaterVersion = "2.2.9"
+        jacksonV = "2.8.10"
+    }
+}
+
+dependencies {
+
+// H20
+    compile("ai.h2o:sparkling-water-core_$scalaVersion:$spWaterVersion")
+    compile("ai.h2o:sparkling-water-examples_${scalaVersion}:${spWaterVersion}")
+
+// Spark
+    compileOnly("org.apache.spark:spark-core_$scalaVersion:$sparkV")
+    compileOnly("org.apache.spark:spark-sql_$scalaVersion:$sparkV")
+
+// Spark for unit tests.
+    testCompile("com.holdenkarau:spark-testing-base_$scalaVersion:$sparkTestV") {
+        exclude group: "org.eclipse.jetty", module: "jetty-util"  // version conflict with h2o
+        exclude group: "org.apache.hadoop", module: "hadoop-hdfs" // will get it from spark
+        exclude group: "org.apache.zookeeper", module: "zookeeper"
+    }
+    //testCompile("org.apache.zookeeper:zookeeper:3.4.6-tests")
+    testCompile("org.apache.spark:spark-core_$scalaVersion:$sparkV")
+    testCompile("org.apache.spark:spark-sql_$scalaVersion:$sparkV")
+
+}

@@ -1,0 +1,3 @@
+rootProject.name = 'h2o-ml'
+include 'h2o-predict'
+include 'h2o-train'

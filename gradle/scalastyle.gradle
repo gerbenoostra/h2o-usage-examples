@@ -1,0 +1,9 @@
+scalaStyle {
+    configLocation = "$rootDir//scalastyle-config.xml"
+    includeTestSourceDirectory = false
+    source = "src/main/scala"
+    testSource = "src/test/scala"
+}
+
+// By default run as one of the checks
+check.dependsOn scalaStyle

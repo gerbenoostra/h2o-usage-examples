@@ -1,0 +1,7 @@
+
+dependencies{
+
+    // H20
+    compile("ai.h2o:h2o-genmodel:$h2oVersion")
+    compile("ai.h2o:h2o-genmodel-ext-xgboost:$h2oVersion")
+}

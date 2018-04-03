@@ -1,0 +1,155 @@
+task wrapper(type: Wrapper) {
+    gradleVersion = "4.2"
+}
+
+buildscript {
+    ext {
+        scalaVersion = "2.11"
+        scalaFullVersion = "2.11.11"
+    }
+    repositories { // Repositories used for fetching plugins.
+        jcenter()
+        mavenCentral()
+        maven {
+            url "https://plugins.gradle.org/m2/"
+        }
+    }
+    dependencies {
+        classpath "org.github.ngbinh.scalastyle:gradle-scalastyle-plugin_$scalaVersion:0.8.2"
+        classpath "gradle.plugin.com.github.maiflai:gradle-scalatest:0.16"
+        classpath "org.scoverage:gradle-scoverage:2.1.0"
+    }
+}
+
+subprojects { project ->
+    version = rootProject.getVersion()
+
+    apply plugin: 'scala'
+    apply plugin: 'scalaStyle'
+    apply plugin: "com.github.maiflai.scalatest"
+    apply plugin: "org.scoverage"
+
+    group 'org.gerbenoostra'
+
+    ext {
+        // 2.1.24 fails with "ERROR: Unknown argument (-stacktrace_collector_interval) " as described in https://0xdata.atlassian.net/browse/SW-776
+        // 2.2.10 fails with "ERROR: Unknown argument (-stacktrace_collector_interval) " as described in https://0xdata.atlassian.net/browse/SW-776
+        spWaterVersion = "2.2.9"
+        h2oVersion = "3.18.0.2"
+        jacksonV = "2.8.10"
+    }
+    configurations {
+        all*.exclude group: "org.slf4j", module: "slf4j-log4j12"
+        all*.exclude group: "log4j", module: "log4j"
+    }
+
+    configurations.all {
+        resolutionStrategy {
+            // Resolve incompatible Jackson version between Spark and our own commons transitive dependencies
+            force "com.fasterxml.jackson.core:jackson-core:$jacksonV"
+            force "com.fasterxml.jackson.core:jackson-databind:$jacksonV"
+            force "com.fasterxml.jackson.module:jackson-module-scala_$scalaVersion:$jacksonV"
+            force "org.codehaus.janino:janino:3.0.0"
+            force "org.codehaus.janino:commons-compiler:3.0.0"
+            force "org.json4s:json4s-jackson_$scalaVersion:3.2.11" // Force to version used by spark_core
+        }
+    }
+
+// Repositories used for code dependencies.
+    repositories {
+        mavenLocal()
+        mavenCentral()
+        jcenter()
+    }
+
+    dependencies {
+        // Scala.
+        compile("org.scala-lang:scala-library:$scalaFullVersion")
+
+        // Scala Configuration and Logging libraries.
+        compile("com.iheart:ficus_$scalaVersion:1.4.2")
+        compile("com.typesafe.scala-logging:scala-logging_$scalaVersion:3.5.0")
+        compile("org.yaml:snakeyaml:1.19")
+
+        // Logging.
+        compile("ch.qos.logback:logback-classic:1.1.11")
+        compile("org.slf4j:log4j-over-slf4j:1.7.25")
+        compile("org.slf4j:jcl-over-slf4j:1.7.25")
+
+        // SCoverage.
+        scoverage("org.scoverage:scalac-scoverage-plugin_$scalaVersion:1.1.0", "org.scoverage:scalac-scoverage-runtime_$scalaVersion:1.1.0")
+
+        // Scala Test + Gradle Integration.
+        testCompile("org.scalatest:scalatest_$scalaVersion:3.0.1")
+        testCompile("org.pegdown:pegdown:1.6.0")  //testRuntime
+
+        // Mocking for unit tests.
+        testCompile("org.easymock:easymock:3.4")
+    }
+    jar {
+        doFirst {
+            manifest {
+                attributes(
+                        'Main-Class': 'org.gerbenoostra.h2o.example.train.Main',
+                        "Class-Path": configurations.runtime.collect { it.getName() }.join(' '),
+                        "Implementation-Title": (getDisplayName() ?: project.name),
+                        "Implementation-Version": (getVersion() ?: "version") + "-" + (getBranch() ?: "branch")
+                )
+            }
+        }
+        archiveName("app.jar")
+    }
+
+    task copyLibs(type: Copy) {
+        into "$buildDir/libs"
+        from configurations.runtime
+    }
+
+    assemble.dependsOn "copyLibs"
+
+    // Enable scalastyle
+    apply from: "$rootDir/gradle/scalastyle.gradle"
+
+    testScoverage {
+        // Integration tests cannot run in parallel, setting parallelism to 1 for all tests.
+        // This is because Embedded Kafka/Cassandra could then potentially clean up their state
+        // in the middle of running test suites.
+        maxParallelForks = 1
+    }
+
+    check {
+        dependsOn "checkScoverage"
+        dependsOn.remove(test)
+    }
+
+    checkScoverage {
+        coverageType = 'Branch'
+        minimumRate = 0.0
+    }
+
+    test {
+        // Integration tests cannot run in parallel, setting parallelism to 1 for all tests.
+        maxParallelForks = 1
+    }
+
+    ScalaCompileOptions.metaClass.daemonServer = true
+    ScalaCompileOptions.metaClass.fork = true
+    ScalaCompileOptions.metaClass.useAnt = false
+    ScalaCompileOptions.metaClass.useCompileDaemon = false
+}
+
+def getBranch() {
+    //Supplied by gitlab ci, does not work for jenkins
+    return System.getenv("CI_COMMIT_REF_NAME")
+}
+
+def getDisplayName() {
+    //Supplied by gitlab ci, does not work for jenkins
+    return System.getenv("CI_PROJECT_NAME")
+}
+
+
+def getVersion() {
+    return System.getenv("CI_PIPELINE_ID") ?: ('local-' + InetAddress.localHost.hostName + '-SNAPSHOT')
+}
+
