@@ -1,0 +1,15 @@
+= H2O Machine learning
+
+An example project showing how to create an H2O based machine learning application.
+
+It consists of two different modules:
+
+* h2o-train : which depends on spark, and can fit a model on large datasets
+* h2o-predict : has no dependency on spark, and will be able to just run the model.
+
+The model will be passed from the training module to the prediction module by serialization.
+
+The preferred way is by using `ModelSerializationSupport`, but the model serialized by that class couldn't be imported by `MojoModel.load`.
+Therefore this branch holds an alternative implementation which seems to work fine.
+
+

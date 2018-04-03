@@ -1,0 +1,22 @@
+## IntellIJ
+.idea/
+*.iml
+
+## Eclipse
+.metadata/
+
+## Mac files
+.DS_Store
+
+## logfiles
+*.log
+
+## Gradle + Build
+.gradle/
+out/
+target/
+/build
+
+## Spark
+spark-warehouse
+build/

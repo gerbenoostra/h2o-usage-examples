@@ -1,0 +1,11 @@
+@startuml
+cloud "spark"
+[h2o-predict] as h2o_predict
+[h2o-train] as h2o_train
+database "h2oModel" as modelstore
+() "h2o-model" as model_api
+h2o_train --> spark
+h2o_train --> modelstore
+model_api <-- modelstore
+h2o_predict -> model_api
+@enduml
