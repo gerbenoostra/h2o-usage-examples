@@ -20,7 +20,7 @@ object Main extends App with LazyLogging {
     row.put("GLEASON", "6")
     val p = model.predictBinomial(row)
     println("Predicted label: " + p.label)
-    println("Class probabilities: "+p.classProbabilities.mkString(", "))
+    println("Class probabilities: " + p.classProbabilities.mkString(", "))
   }
 
   def loadModel(file: File): EasyPredictModelWrapper = {
