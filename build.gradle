@@ -41,6 +41,7 @@ subprojects { project ->
     configurations {
         all*.exclude group: "org.slf4j", module: "slf4j-log4j12"
         all*.exclude group: "log4j", module: "log4j"
+        all*.exclude group: "asm", module: "asm" // somehow needed to force asm 5.0.3
     }
 
     configurations.all {
@@ -52,6 +53,7 @@ subprojects { project ->
             force "org.codehaus.janino:janino:3.0.0"
             force "org.codehaus.janino:commons-compiler:3.0.0"
             force "org.json4s:json4s-jackson_$scalaVersion:3.2.11" // Force to version used by spark_core
+            force "org.ow2.asm:asm:5.0.3"
         }
     }
 
